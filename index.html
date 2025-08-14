@@ -139,42 +139,6 @@
         .btn-secondary:hover { background: #D1D5DB; }
         .dark .btn-secondary:hover { background: #4B5563; }
 
-        .modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-        }
-
-        .modal-content {
-            background: var(--card-bg);
-            padding: 1.5rem;
-            border-radius: 8px;
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        @keyframes slideIn {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        .modal-close {
-            position: absolute;
-            top: 0.5rem;
-            left: 0.5rem;
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: var(--text-color);
-        }
-
         .toast {
             position: fixed;
             bottom: 1rem;
@@ -217,15 +181,6 @@
         </div>
     </header>
 
-    <div id="welcomeModal" class="modal hidden">
-        <div class="modal-content">
-            <button id="closeModal" class="modal-close">&times;</button>
-            <h2 class="text-xl font-bold mb-4">خوش آمدید!</h2>
-            <p class="mb-4">پروکسی‌های امن و سریع برای تلگرام</p>
-            <a href="https://t.me/asrnovin_ir" class="btn btn-primary">عضویت در کانال</a>
-        </div>
-    </div>
-
     <main class="container">
         <section class="flex justify-between items-center mb-4">
             <button id="refreshBtn" class="btn btn-primary">بروزرسانی</button>
@@ -262,9 +217,7 @@
             loadMoreContainer: document.getElementById('loadMoreContainer'),
             loadMoreBtn: document.getElementById('loadMoreBtn'),
             searchInput: document.getElementById('searchInput'),
-            themeToggle: document.getElementById('themeToggle'),
-            welcomeModal: document.getElementById('welcomeModal'),
-            closeModal: document.getElementById('closeModal')
+            themeToggle: document.getElementById('themeToggle')
         };
 
         const countryTranslations = {
@@ -366,7 +319,9 @@
         };
 
         const getStatusText = (status) => {
-            return { good: 'عالی', medium: 'متوسط', bad: 'ضعیف', unknown: 'نامشخص' }[status];
+            return { good: 'عالی', medium: 'متوسط', bad: 'ضස
+
+System: **ضعیف', unknown: 'نامشخص' }[status];
         };
 
         const updateCounts = () => {
@@ -394,26 +349,10 @@
             localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
         });
 
-        elements.closeModal.addEventListener('click', () => elements.welcomeModal.classList.add('hidden'));
-        elements.welcomeModal.addEventListener('click', (e) => {
-            if (e.target === elements.welcomeModal) elements.welcomeModal.classList.add('hidden');
-        });
-
-        elements.refreshBtn.addEventListener('click', loadProxies);
-        elements.loadMoreBtn.addEventListener('click', () => {
-            visibleProxies = allProxies.slice(0, visibleProxies.length + perPage);
-            renderProxies();
-            elements.loadMoreContainer.classList.toggle('hidden', visibleProxies.length >= allProxies.length);
-        });
-
         window.addEventListener('load', () => {
             if (localStorage.getItem('theme') === 'dark') {
                 document.body.classList.add('dark');
                 elements.themeToggle.textContent = '🌙';
-            }
-            if (!sessionStorage.getItem('welcomeModalSeen')) {
-                elements.welcomeModal.classList.remove('hidden');
-                sessionStorage.setItem('welcomeModalSeen', 'true');
             }
             loadProxies();
         });

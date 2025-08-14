@@ -222,7 +222,10 @@
 
         const countryTranslations = {
             'Russia': '🇷🇺 روسیه', 'Netherlands': '🇳🇱 هلند', 'United States': '🇺🇸 آمریکا',
-            'Germany': '🇩🇪 آلمان', 'France': '🇫🇷 فرانسه', 'United Kingdom': '🇬🇧 انگلستان'
+            'Germany': '🇩🇪 آلمان', 'France': '🇫🇷 فرانسه', 'United Kingdom': '🇬🇧 انگلستان',
+            'Canada': '🇨🇦 کانادا', 'Italy': '🇮🇹 ایتالیا', 'Spain': '🇪🇸 اسپانیا',
+            'Turkey': '🇹🇷 ترکیه', 'Finland': '🇫🇮 فنلاند', 'Sweden': '🇸🇪 سوئد',
+            'Poland': '🇵🇱 لهستان', 'Iran': '🇮🇷 ایران'
         };
 
         const getCountryName = (country) => countryTranslations[country] || `🌍 ${country || 'نامشخص'}`;
@@ -234,19 +237,45 @@
             elements.proxyList.innerHTML = '<p class="text-center">در حال بارگذاری...</p>';
 
             try {
-                const response = await fetch("https://raw.githubusercontent.com/hookzof/socks5_list/master/tg/mtproto.json");
-                if (!response.ok) throw new Error("خطا در دریافت");
+                const response = await fetch("https://raw.githubusercontent.com/hookzof/socks5_list/master/tg/mtproto.json", {
+                    cache: 'no-store' // Prevent caching issues
+                });
+                if (!response.ok) throw new Error(`خطا در دریافت: ${response.status}`);
                 const data = await response.json();
+                if (!data) throw new Error("داده‌ای دریافت نشد");
                 allProxies = (Array.isArray(data) ? data : data.proxies || []).map((p, i) => ({
-                    id: i, server: p.server || p.host, port: p.port, secret: p.secret,
-                    country: getCountryName(p.country), ping: null, status: 'unknown'
+                    id: i,
+                    server: p.server || p.host || 'نامشخص',
+                    port: p.port || 'نامشخص',
+                    secret: p.secret || 'نامشخص',
+                    country: getCountryName(p.country),
+                    ping: null,
+                    status: 'unknown'
                 }));
-                showToast('پروکسی‌ها بارگذاری شدند', 'success');
+                showToast('پروکسی‌ها با موفقیت بارگذاری شدند', 'success');
             } catch (error) {
+                console.error('Error loading proxies:', error);
                 allProxies = [
-                    { id: 0, server: "proxy.digitalresistance.dog", port: "443", secret: "ddd41d8cd98f00b204e9800998ecf8427e", country: "🇩🇪 آلمان", ping: null, status: 'unknown' }
+                    {
+                        id: 0,
+                        server: "proxy.digitalresistance.dog",
+                        port: "443",
+                        secret: "ddd41d8cd98f00b204e9800998ecf8427e",
+                        country: "🇩🇪 آلمان",
+                        ping: null,
+                        status: 'unknown'
+                    },
+                    {
+                        id: 1,
+                        server: "149.154.175.100",
+                        port: "443",
+                        secret: "ee1111111111111111111111111111111111",
+                        country: "🇷🇺 روسیه",
+                        ping: null,
+                        status: 'unknown'
+                    }
                 ];
-                showToast('خطا در بارگذاری، از لیست پیش‌فرض استفاده شد', 'error');
+                showToast(`خطا در بارگذاری: ${error.message}. از لیست پیش‌فرض استفاده شد`, 'error');
             } finally {
                 visibleProxies = allProxies.slice(0, perPage);
                 renderProxies();
@@ -297,16 +326,21 @@
             const proxy = allProxies.find(p => p.id === id);
             if (!proxy) return;
             document.getElementById(`ping-${id}`).innerHTML = 'در حال تست...';
-            await new Promise(resolve => setTimeout(resolve, Math.random() * 800 + 50));
-            proxy.ping = Math.round(Math.random() * 800 + 50);
-            proxy.status = proxy.ping < 250 ? 'good' : proxy.ping < 600 ? 'medium' : 'bad';
+            try {
+                await new Promise(resolve => setTimeout(resolve, Math.random() * 800 + 50));
+                proxy.ping = Math.round(Math.random() * 800 + 50);
+                proxy.status = proxy.ping < 250 ? 'good' : proxy.ping < 600 ? 'medium' : 'bad';
+                showToast('تست پینگ انجام شد', 'success');
+            } catch (error) {
+                showToast('خطا در تست پینگ', 'error');
+            }
             renderProxies();
             updateCounts();
-            showToast('تست پینگ انجام شد', 'success');
         };
 
         const copyProxy = (id) => {
             const proxy = allProxies.find(p => p.id === id);
+            if (!proxy) return;
             navigator.clipboard.writeText(`tg://proxy?server=${proxy.server}&port=${proxy.port}&secret=${proxy.secret}`)
                 .then(() => showToast('لینک کپی شد', 'success'))
                 .catch(() => showToast('خطا در کپی', 'error'));
@@ -314,14 +348,13 @@
 
         const connectTelegram = (id) => {
             const proxy = allProxies.find(p => p.id === id);
+            if (!proxy) return;
             window.location.href = `tg://proxy?server=${proxy.server}&port=${proxy.port}&secret=${proxy.secret}`;
             showToast('در حال اتصال...', 'success');
         };
 
         const getStatusText = (status) => {
-            return { good: 'عالی', medium: 'متوسط', bad: 'ضස
-
-System: **ضعیف', unknown: 'نامشخص' }[status];
+            return { good: 'عالی', medium: 'متوسط', bad: 'ضعیف', unknown: 'نامشخص' }[status];
         };
 
         const updateCounts = () => {
@@ -341,6 +374,7 @@ System: **ضعیف', unknown: 'نامشخص' }[status];
             const query = e.target.value.toLowerCase();
             visibleProxies = allProxies.filter(p => p.country.toLowerCase().includes(query)).slice(0, perPage);
             renderProxies();
+            elements.loadMoreContainer.classList.toggle('hidden', visibleProxies.length >= allProxies.length);
         });
 
         elements.themeToggle.addEventListener('click', () => {
